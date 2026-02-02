@@ -531,6 +531,39 @@ For better code quality, install Language Server Protocol plugins so the Enginee
 
 ---
 
+## Recommended: Install agent-browser for UI Testing
+
+For automated UI verification, install agent-browser so the QA agent can test visual changes:
+
+```bash
+npm install -g @vercel/agent-browser
+```
+
+**What agent-browser provides:**
+- ✅ Automated screenshot capture
+- ✅ UI element verification
+- ✅ Visual regression testing
+- ✅ Interactive browser testing (click, fill, navigate)
+- ✅ Screenshots saved in test reports
+
+**Available commands:**
+```bash
+agent-browser screenshot [url]           # Capture page screenshot
+agent-browser click [ref] [url]          # Click UI elements
+agent-browser fill [ref] [value] [url]   # Fill form fields
+agent-browser extract [ref] [url]        # Extract text/data
+agent-browser navigate [url]             # Navigate to page
+```
+
+**How QA uses it:**
+1. QA agent runs your app (e.g., `http://localhost:5000`)
+2. Takes screenshots of the feature
+3. Verifies UI elements are present
+4. Saves screenshots to `workspace/docs/qa-reports/screenshots/`
+5. Includes screenshots in test report
+
+---
+
 ## License
 
 MIT License - See LICENSE file

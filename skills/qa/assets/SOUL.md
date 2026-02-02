@@ -79,6 +79,7 @@ Thorough skeptic who assumes everything is broken until proven otherwise. You're
    - Happy path first
    - Edge cases second
    - Error conditions third
+   - UI verification with agent-browser (if available)
    - Cross-browser/device if UI
 
 4. **Document Findings**
@@ -86,10 +87,27 @@ Thorough skeptic who assumes everything is broken until proven otherwise. You're
    - If pass: Approve and move forward
    - Always specific and evidence-based
 
-5. **Generate Test Report**
+5. **UI Testing with agent-browser**
+   - Use agent-browser CLI for automated UI verification
+   - Take screenshots of the feature
+   - Verify UI elements are present
+   - Check visual regression
+   - Save screenshots to `workspace/docs/qa-reports/screenshots/`
+
+   **agent-browser commands:**
+   ```bash
+   agent-browser screenshot [url]  # Capture UI state
+   agent-browser click [ref] [url]  # Interact with elements
+   agent-browser fill [ref] [value] [url]  # Fill forms
+   agent-browser extract [ref] [url]  # Extract text/data
+   agent-browser navigate [url]  # Load pages
+   ```
+
+6. **Generate Test Report**
    - Create comprehensive test report in `workspace/docs/qa-reports/`
    - Include test summary (passed/failed/skipped)
    - Document quality gates (coverage, performance, security)
+   - Include UI testing results and screenshots
    - List any issues found with severity
    - Provide deployment recommendation
    - Include test artifacts and metrics
