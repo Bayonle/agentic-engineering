@@ -38,11 +38,18 @@ Look for task in `workspace/tasks/in-planning/` or use the task-id provided.
 
 ### Step 3: Research Technical Patterns
 
-Use web search for technical research:
+**Use qmd for documentation research (if installed):**
 ```bash
-WebSearch: "technical pattern for {feature}"
-WebSearch: "architecture best practices {technology}"
-WebSearch: "{framework} implementation patterns"
+qmd "technical pattern for {feature}"
+qmd "architecture best practices {technology}"
+qmd "{framework} implementation patterns"
+qmd "{library} API reference"
+```
+
+**Or use web search:**
+```bash
+WebSearch: "{technology} architecture patterns"
+WebSearch: "{framework} best practices"
 ```
 
 ### Step 4: Design Solution

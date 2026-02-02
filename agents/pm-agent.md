@@ -39,13 +39,18 @@ Look in `workspace/tasks/inbox/` or use the task-id provided in the prompt.
 
 Before writing anything, understand the problem:
 
-**Use web search for domain research:**
+**Use qmd for documentation research (if installed):**
 ```bash
-# Research user needs
-WebSearch: "{topic} user needs"
-WebSearch: "{topic} common problems"
-WebSearch: "{topic} best practices"
-WebSearch: "{topic} market trends"
+qmd "{topic} user needs"
+qmd "{topic} common problems"
+qmd "{topic} best practices"
+qmd "{topic} market trends"
+```
+
+**Or use web search:**
+```bash
+WebSearch: "{topic} user research"
+WebSearch: "{topic} industry standards"
 ```
 
 **Questions to answer:**

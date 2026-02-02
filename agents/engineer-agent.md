@@ -48,11 +48,17 @@ git checkout -b feature/{task-id}
 
 ### Step 4: Research (if needed)
 
-Use web search for implementation help:
+**Use qmd for documentation (if installed):**
 ```bash
-WebSearch: "{technology} implementation"
-WebSearch: "{api} usage examples"
-WebSearch: "{framework} best practices"
+qmd "{technology} implementation"
+qmd "{api} usage examples"
+qmd "{library} documentation"
+```
+
+**Or use web search:**
+```bash
+WebSearch: "{framework} implementation guide"
+WebSearch: "{api} examples"
 ```
 
 ### Step 5: Implement
@@ -72,6 +78,9 @@ Follow the plan's implementation steps:
 - Validate inputs at boundaries
 - Write meaningful test cases
 - No hardcoded secrets or credentials
+
+**LSP Diagnostics (if LSP plugin installed):**
+Claude Code's LSP integration will automatically show type errors, undefined references, and other diagnostics after each edit. **Fix any LSP errors before continuing** - they indicate real problems in your code.
 
 ### Step 6: Commit to Feature Branch
 
