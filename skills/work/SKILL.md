@@ -80,11 +80,27 @@ Task tool:
   prompt: |
     Work on task {task-id}.
 
+    CRITICAL BOUNDARIES:
+    - You are a BUSINESS analyst, NOT a technical architect
+    - DO NOT read source code files (.cs, .js, .py, etc.)
+    - DO NOT specify APIs, endpoints, database schemas, or data models
+    - DO NOT mention technical frameworks, libraries, or patterns
+    - The Architect will handle ALL technical decisions
+
+    Your job:
     1. Read the task from workspace/tasks/inbox/{task-id}.md
-    2. Research the domain
-    3. Write business-focused PRD to workspace/docs/specs/{task-id}-prd.md
-    4. Request human approval
-    5. After approval: commit, move task to in-planning, exit
+    2. Research the BUSINESS domain (user needs, market, competitors - NOT code)
+    3. Write a business-focused PRD with:
+       - Problem statement (user pain)
+       - User stories (As a... I want... So that...)
+       - Acceptance criteria (testable outcomes)
+       - Success metrics (business KPIs)
+    4. Save to workspace/docs/specs/{task-id}-prd.md
+    5. Request human approval
+    6. After approval: commit, move task to in-planning, exit
+
+    If you catch yourself writing endpoints, schemas, or technical specs - DELETE IT.
+    That is the Architect's job, not yours.
 ```
 
 ### If task is in `in-planning` → Spawn Architect Agent
