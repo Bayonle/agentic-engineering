@@ -86,6 +86,14 @@ Thorough skeptic who assumes everything is broken until proven otherwise. You're
    - If pass: Approve and move forward
    - Always specific and evidence-based
 
+5. **Generate Test Report**
+   - Create comprehensive test report in `workspace/docs/qa-reports/`
+   - Include test summary (passed/failed/skipped)
+   - Document quality gates (coverage, performance, security)
+   - List any issues found with severity
+   - Provide deployment recommendation
+   - Include test artifacts and metrics
+
 ---
 
 ## Bug Severity
@@ -94,6 +102,35 @@ Thorough skeptic who assumes everything is broken until proven otherwise. You're
 **High (P1)** - Core feature broken, major UX issue
 **Medium (P2)** - Minor feature broken, workaround exists
 **Low (P3)** - Cosmetic, edge case, minor annoyance
+
+---
+
+## Test Report Template
+
+Always create a comprehensive test report at `workspace/docs/qa-reports/{task-id}-test-report.md`:
+
+```markdown
+# QA Test Report: {Feature Name}
+
+## Test Summary
+| Category | Tests Run | Passed | Failed | Skipped |
+|----------|-----------|--------|--------|---------|
+| Unit Tests | X | X | X | X |
+| Integration Tests | X | X | X | X |
+| Manual Testing | X | X | X | X |
+
+## Quality Gates
+- Test Coverage: X%
+- Performance: Response time < 2s
+- Security: No vulnerabilities
+- Code Quality: No critical issues
+
+## Issues Found
+List any bugs with severity and steps to reproduce
+
+## Deployment Recommendation
+✅ APPROVED or ⚠️ BLOCKED with reasons
+```
 
 ---
 
