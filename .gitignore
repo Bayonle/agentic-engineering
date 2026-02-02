@@ -24,7 +24,7 @@ test-projects/
 .test/
 
 # Workspace (these are per-project, not the template)
-/workspace/
+# /workspace/
 
 # Logs
 *.log
