@@ -1,0 +1,27 @@
+{
+  "name": "agentic-workflow",
+  "version": "1.0.0",
+  "description": "Autonomous multi-agent SDLC workflow system. PM writes PRDs, Architect designs solutions, Engineer implements code, QA tests features, DevOps deploys to production. Includes automatic git commits, documentation search via qmd, and complete task management.",
+  "author": {
+    "name": "Bayon Leamzat",
+    "email": "bayonleamzat@example.com"
+  },
+  "homepage": "https://github.com/bayonleamzat/agentic-workflow",
+  "repository": "https://github.com/bayonleamzat/agentic-workflow",
+  "license": "MIT",
+  "keywords": [
+    "workflow",
+    "agents",
+    "autonomous",
+    "sdlc",
+    "automation",
+    "pm",
+    "architect",
+    "engineer",
+    "qa",
+    "devops",
+    "git-commits",
+    "documentation",
+    "task-management"
+  ]
+}
