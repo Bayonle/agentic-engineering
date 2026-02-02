@@ -28,8 +28,13 @@ def get_plugin_dir():
 PLUGIN_DIR = get_plugin_dir()
 sys.path.insert(0, str(PLUGIN_DIR / 'lib'))
 
+from workspace_init import ensure_workspace
 from task_manager import get_task_manager
 from activity import log_activity
+
+# Ensure workspace exists and we're in project root
+project_root, workspace_path = ensure_workspace(PLUGIN_DIR)
+os.chdir(project_root)  # Always work from project root
 
 # Get task ID
 if len(args) > 0:
