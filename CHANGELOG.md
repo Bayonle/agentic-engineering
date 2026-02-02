@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1] - 2026-02-02
+
+### Self-Contained Native Subagents
+
+Merged all skill content into native subagent files. Each agent is now fully self-contained with:
+
+- **pm-agent.md** (257 lines): Full PRD template, research questions, PM vs Architect comparison
+- **architect-agent.md** (293 lines): Complete technical plan template, API schemas, data models
+- **engineer-agent.md** (255 lines): Git workflow, quality checklist, code patterns (C#)
+- **qa-agent.md** (293 lines): Test report template, agent-browser commands, quality gates
+- **devops-agent.md** (253 lines): Deployment checklist, rollback procedures, deployment report
+
+### Removed Redundant Skills
+
+Deleted skill directories now replaced by native subagents:
+- `skills/pm/` → `agents/pm-agent.md`
+- `skills/architect/` → `agents/architect-agent.md`
+- `skills/engineer/` → `agents/engineer-agent.md`
+- `skills/qa/` → `agents/qa-agent.md`
+- `skills/deploy/` → `agents/devops-agent.md`
+
+### Retained Skills
+
+- `skills/work/` - Orchestrator (`/work` command)
+- `skills/task/` - Quick task creation (`/task` command)
+
+---
+
 ## [2.0.0] - 2026-02-02
 
 ### MAJOR RELEASE - Native Claude Code Subagents
