@@ -1,0 +1,37 @@
+{
+  "name": "agentic-engineering",
+  "owner": {
+    "name": "Bayonle Amzat",
+    "email": "bayonleamzat@example.com"
+  },
+  "metadata": {
+    "description": "Autonomous multi-agent SDLC workflow system for Claude Code",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "agentic-workflow",
+      "source": "./",
+      "description": "Autonomous multi-agent SDLC workflow system. PM writes PRDs, Architect designs solutions, Engineer implements code, QA tests features, DevOps deploys to production.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Bayonle Amzat"
+      },
+      "homepage": "https://github.com/Bayonle/agentic-engineering",
+      "repository": "https://github.com/Bayonle/agentic-engineering",
+      "license": "MIT",
+      "keywords": [
+        "workflow",
+        "agents",
+        "autonomous",
+        "sdlc",
+        "automation",
+        "pm",
+        "architect",
+        "engineer",
+        "qa",
+        "devops"
+      ]
+    }
+  ]
+}
