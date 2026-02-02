@@ -25,15 +25,20 @@ Full software development lifecycle automation with git commits, documentation s
 ### Install Plugin
 
 ```bash
-# Clone from GitHub
-git clone https://github.com/Bayonle/agentic-engineering.git
-cd agentic-engineering
+# Add the marketplace
+/plugin marketplace add Bayonle/agentic-engineering
 
-# Install locally
-claude plugin install .
+# Install the plugin
+/plugin install agentic-workflow@agentic-engineering
 ```
 
-**Note:** Claude Code currently requires local installation. The plugin will be submitted to the official marketplace for direct URL installation in the future.
+**Alternative - Local installation:**
+```bash
+# Clone and install locally
+git clone https://github.com/Bayonle/agentic-engineering.git
+cd agentic-engineering
+claude plugin install .
+```
 
 ### Verify Installation
 
