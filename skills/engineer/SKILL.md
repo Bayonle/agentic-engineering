@@ -73,6 +73,30 @@ plan_content = read_file(plan_path)
 print(f"✓ Plan loaded from: {plan_path}")
 print("")
 
+# Create feature branch
+print("🌿 Creating feature branch...")
+git_check = os.system('git rev-parse --git-dir >/dev/null 2>&1')
+if git_check == 0:
+    # Create branch name from task ID
+    branch_name = f"feature/{task_id}"
+
+    # Ensure we're on main and up to date
+    os.system('git checkout main >/dev/null 2>&1')
+    os.system('git pull origin main >/dev/null 2>&1')
+
+    # Create and checkout feature branch
+    result = os.system(f'git checkout -b {branch_name} 2>/dev/null')
+    if result != 0:
+        # Branch might already exist, just checkout
+        os.system(f'git checkout {branch_name} >/dev/null 2>&1')
+
+    print(f"✓ Working on branch: {branch_name}")
+else:
+    print("⚠️  Not a git repository, working without branches")
+    branch_name = None
+
+print("")
+
 # Research with qmd
 print("📚 Looking up relevant documentation...")
 research_query = f"{task.title} implementation"
@@ -99,9 +123,52 @@ print("")
 print("✓ Code quality verified")
 print("")
 
+# Commit to feature branch
+print("📦 Committing to feature branch...")
+git_check = os.system('git rev-parse --git-dir >/dev/null 2>&1')
+if git_check == 0:
+    os.system('git add . workspace/')
+    commit_msg = f"[Engineer] Implement {task.title}"
+    commit_cmd = f'''git commit -m "$(cat <<'EOF'
+{commit_msg}
+
+Implemented feature following technical plan.
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
+EOF
+)"'''
+    os.system(commit_cmd)
+
+    # Push feature branch
+    if branch_name:
+        print(f"📤 Pushing feature branch: {branch_name}")
+        os.system(f'git push -u origin {branch_name}')
+        print(f"✓ Committed and pushed to: {branch_name}")
+    else:
+        print("✓ Committed locally")
+else:
+    print("⚠️  Not a git repository, skipping commit")
+
+print("")
+
 # Create PR
 print("📝 Creating pull request...")
-pr_url = f"https://github.com/placeholder/pull/{task_id}"
+if git_check == 0 and branch_name:
+    # Use gh CLI to create PR
+    pr_result = os.popen(f'gh pr create --title "[{task_id}] {task.title}" --body "Implements {task.title}\n\nSee workspace/docs/plans/{task_id}-plan.md for technical details." --base main --head {branch_name} 2>&1').read()
+
+    if 'https://' in pr_result:
+        # Extract PR URL
+        import re
+        pr_match = re.search(r'https://[^\s]+', pr_result)
+        pr_url = pr_match.group(0) if pr_match else f"https://github.com/repo/pull/{task_id}"
+    else:
+        print("   ℹ️  Could not auto-create PR with gh CLI")
+        print(f"   Create PR manually: {branch_name} -> main")
+        pr_url = f"https://github.com/repo/pull/{task_id}"
+else:
+    pr_url = f"https://github.com/repo/pull/{task_id}"
+
 tm.update_task(task_id, pr=pr_url)
 tm.add_comment(task_id, 'engineer', f'Implementation complete. PR: {pr_url}')
 log_activity('engineer', f'Created PR for {task_id}')
@@ -122,27 +189,6 @@ Implemented {task.title} and created PR. Spawning QA agent for testing.
 """
 write_file('workspace/agents/engineer/WORKING.md', working_content)
 print("✓ Memory updated")
-print("")
-
-# Git Commit
-print("📦 Committing work to git...")
-git_check = os.system('git rev-parse --git-dir >/dev/null 2>&1')
-if git_check == 0:
-    os.system('git add . workspace/')
-    commit_msg = f"[Engineer] Implement {task.title}"
-    commit_cmd = f'''git commit -m "$(cat <<'EOF'
-{commit_msg}
-
-Implemented feature following technical plan.
-
-Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
-EOF
-)"'''
-    os.system(commit_cmd)
-    os.system('git push')
-    print(f"✓ Committed: {commit_msg}")
-else:
-    print("⚠️  Not a git repository, skipping commit")
 print("")
 
 # Mark ready for testing
