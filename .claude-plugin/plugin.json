@@ -1,6 +1,6 @@
 {
   "name": "agentic-workflow",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Autonomous multi-agent SDLC workflow system. PM writes PRDs, Architect designs solutions, Engineer implements code, QA tests features, DevOps deploys to production. Includes automatic git commits, documentation search via qmd, and complete task management.",
   "author": {
     "name": "Bayonle Amzat",
