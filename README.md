@@ -94,11 +94,25 @@ That's it! The workflow will:
 | Command | Agent | Purpose |
 |---------|-------|---------|
 | `/work task-id` | All | Full workflow PM→Architect→Engineer→QA→DevOps |
+| `/task "title" [agent] [status]` | - | **Quick task creation** and assignment |
 | `/pm task-id` | PM | Research requirements, write PRD |
 | `/architect task-id` | Architect | Design solution, create technical plan |
 | `/engineer task-id` | Engineer | Implement code, create PR |
 | `/qa task-id` | QA | Test feature, verify quality |
 | `/deploy task-id` | DevOps | Deploy to production |
+
+### Quick Task Creation
+
+```bash
+# Create task in inbox
+/task "Implement Swagger docs"
+
+# Create and assign to engineer (skips PM/Architect)
+/task "Add user auth" engineer
+
+# Create with specific status
+/task "Fix bug" engineer in-progress
+```
 
 ---
 
