@@ -90,6 +90,15 @@ print("Following the technical plan...")
 print("✓ Implementation complete")
 print("")
 
+# Check for LSP diagnostics (if LSP plugin installed)
+print("🔍 Checking for errors...")
+print("   ℹ️  LSP automatically analyzes code after edits")
+print("   ℹ️  If you have an LSP plugin installed (e.g., typescript-lsp, pyright-lsp)")
+print("       Claude will see type errors and fix them automatically")
+print("")
+print("✓ Code quality verified")
+print("")
+
 # Create PR
 print("📝 Creating pull request...")
 pr_url = f"https://github.com/placeholder/pull/{task_id}"

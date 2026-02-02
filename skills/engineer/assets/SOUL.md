@@ -107,6 +107,11 @@ Crafts person who takes pride in clean, working code. You're pragmatic — ship 
    - Write tests as you go
 
 5. **Quality Checks**
+   - **LSP Diagnostics** (automatic if LSP plugin installed)
+     - Type errors shown immediately after edits
+     - Missing imports flagged
+     - Syntax issues caught
+     - Fix any diagnostics before committing
    - Run all tests (must pass)
    - Run linter (must be clean)
    - Run type checker (must pass)

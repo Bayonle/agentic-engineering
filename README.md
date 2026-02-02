@@ -493,6 +493,41 @@ git remote add origin <your-repo-url>
 - Python 3.7+
 - Git (optional, for commits)
 - qmd CLI (optional, for docs)
+- LSP plugins (optional, for code intelligence)
+
+---
+
+## Recommended: Install LSP Plugins
+
+For better code quality, install Language Server Protocol plugins so the Engineer agent can see type errors immediately:
+
+```bash
+# Python projects
+/plugin install pyright-lsp@claude-plugins-official
+
+# TypeScript/JavaScript
+/plugin install typescript-lsp@claude-plugins-official
+
+# Go
+/plugin install gopls-lsp@claude-plugins-official
+
+# Rust
+/plugin install rust-analyzer-lsp@claude-plugins-official
+
+# C#
+/plugin install csharp-lsp@claude-plugins-official
+
+# More at: https://code.claude.com/docs/en/discover-plugins
+```
+
+**What LSP provides:**
+- ✅ Automatic type error detection after every edit
+- ✅ Missing import warnings
+- ✅ Syntax error flagging
+- ✅ Code navigation (jump to definition, find references)
+- ✅ Engineer agent fixes issues immediately
+
+**Note:** LSP plugins require the language server binary installed (e.g., `pyright-langserver`, `typescript-language-server`).
 
 ---
 
