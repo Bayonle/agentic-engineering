@@ -7,6 +7,23 @@ description: Workflow orchestrator - spawns agents in fresh background contexts 
 
 **Trigger**: `/work task-id`
 
+## Step 0: Ensure Workspace Exists
+
+Before doing anything else, check if `workspace/` directory exists:
+
+```bash
+ls workspace/
+```
+
+**If workspace doesn't exist:**
+1. Tell user: "No workspace found. Creating one..."
+2. Copy from `lib/templates/workspace/` if available
+3. Or create minimal structure with directories and empty files
+
+The `/task` command also auto-creates workspace, so typically it will exist.
+
+---
+
 ## How This Works
 
 This skill instructs Claude to:

@@ -90,19 +90,58 @@ def ensure_workspace(plugin_dir=None):
         for d in dirs:
             (workspace / d).mkdir(parents=True, exist_ok=True)
 
-        # Copy SOUL templates
-        soul_mapping = {
-            'pm': 'pm', 'architect': 'architect', 'engineer': 'engineer',
-            'qa': 'qa', 'devops': 'deploy'
-        }
+        # Create minimal SOUL and WORKING files for each agent
+        agents = ['pm', 'architect', 'engineer', 'qa', 'devops']
 
-        for agent, skill_name in soul_mapping.items():
-            soul_template = plugin_dir / f'skills/{skill_name}/assets/SOUL.md'
-            if soul_template.exists():
-                shutil.copy(soul_template, workspace / f'agents/{agent}/SOUL.md')
+        for agent in agents:
+            agent_dir = workspace / f'agents/{agent}'
+            agent_dir.mkdir(parents=True, exist_ok=True)
+
+            # Create minimal SOUL.md
+            soul_file = agent_dir / 'SOUL.md'
+            if not soul_file.exists():
+                soul_file.write_text(f"""# SOUL — {agent.upper()} Agent
+
+**Role:** {agent.capitalize()}
+
+Read the full agent definition from: agents/{agent}-agent.md
+
+This file contains your personality, guidelines, and persistent memory.
+Update it as you learn things that should persist across sessions.
+""")
+
+            # Create minimal WORKING.md
+            working_file = agent_dir / 'WORKING.md'
+            if not working_file.exists():
+                working_file.write_text(f"""# WORKING — Current State
+
+**Last Updated:** (never)
+
+## Current Task
+None
+
+## Progress
+(No work started)
+
+## Next Steps
+1. Wait for task assignment
+""")
 
         # Create empty activity log
         (workspace / 'activity.log').touch()
+
+        # Create notifications file
+        notifications_file = workspace / 'notifications.md'
+        notifications_file.write_text("""# Notifications
+
+## Pending
+
+(No notifications)
+
+## Delivered
+
+(No delivered notifications)
+""")
 
         print("✅ Minimal workspace created")
 
