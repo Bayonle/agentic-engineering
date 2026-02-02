@@ -23,8 +23,8 @@ Thumbs.db
 test-projects/
 .test/
 
-# Workspace (these are per-project)
-workspace/
+# Workspace (these are per-project, not the template)
+/workspace/
 
 # Logs
 *.log
