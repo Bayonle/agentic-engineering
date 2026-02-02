@@ -3,81 +3,130 @@ name: deploy
 description: DevOps Agent - Deploys to production, verifies deployment, marks tasks complete
 ---
 
-# DevOps Agent - Final Deployment
+# DevOps Agent
 
 **Trigger**: `/deploy [task-id]`
-**Purpose**: Deploy to production and mark complete
+
+## What This Skill Does
+
+When invoked, Claude acts as the DevOps agent:
+1. Merges the PR
+2. Runs deployment pipeline
+3. Verifies deployment health
+4. Marks task as deployed
+5. Commits final status
+6. Exits (workflow complete!)
+
+**This is the FINAL agent in the workflow. No more agents after this.**
 
 ---
 
-## Implementation
+## Instructions for Claude
 
-```python
-import sys
-import os
-from datetime import datetime
-from pathlib import Path
+### Step 1: Find Task
 
-# Plugin initialization
-def get_plugin_dir():
-    if '__file__' in globals():
-        return Path(__file__).resolve().parent.parent.parent
-    return Path.home() / '.claude/plugins/cache/agentic-workflow'
+Look for task in `workspace/tasks/ready-to-deploy/` or use provided task-id.
 
-PLUGIN_DIR = get_plugin_dir()
-sys.path.insert(0, str(PLUGIN_DIR / 'lib'))
+### Step 2: Merge PR
 
-from task_manager import get_task_manager
-from activity import log_activity
+```bash
+# Get PR number from task
+gh pr list --head feature/{task-id}
 
-# Get task ID
-if len(args) == 0:
-    print("❌ Task ID required")
-    print("Usage: /deploy task-001")
-    return
-
-task_id = args[0]
-
-print(f"🚀 DevOps Agent starting deployment: {task_id}")
-print("")
-
-# Assign and deploy
-tm = get_task_manager('workspace')
-task = tm.find_task(task_id)
-if 'devops' not in task.assigned:
-    tm.assign_task(task_id, 'devops')
-
-print("🚀 Deploying to production...")
-print("  ✓ Merging PR")
-print("  ✓ Running build pipeline")
-print("  ✓ Deploying")
-print("  ✓ Verifying health checks")
-print("")
-
-# Mark deployed
-tm.move_task(task_id, 'deployed')
-tm.add_comment(task_id, 'devops', f"✅ Deployment complete! Feature is now live! 🎉")
-log_activity('devops', f'Deployed {task_id} to production')
-
-# Update memory
-working_content = f"""# WORKING — Current State
-**Last Updated:** {datetime.now().isoformat()[:16]}
-**Task ID:** {task_id}
-**Status:** Deployed ✅
-"""
-write_file('workspace/agents/devops/WORKING.md', working_content)
-
-# Git commit
-git_check = os.system('git rev-parse --git-dir >/dev/null 2>&1')
-if git_check == 0:
-    os.system('git add workspace/')
-    commit_msg = f"[DevOps] Deploy {task.title} to production"
-    os.system(f'git commit -m "{commit_msg}\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"')
-    os.system('git push')
-
-print("="*60)
-print("🎉 WORKFLOW COMPLETE!")
-print("="*60)
-print(f"Task {task_id}: {task.title}")
-print("Feature is now LIVE in production! 🚀")
+# Merge the PR
+gh pr merge {pr-number} --merge --delete-branch
 ```
+
+Or tell user to merge manually.
+
+### Step 3: Deploy
+
+```bash
+# Run deployment (project-specific)
+# Could be:
+# - GitHub Actions (automatic on merge)
+# - Manual deployment script
+# - Cloud provider CLI
+
+# Example:
+# az webapp deploy ...
+# aws deploy ...
+# kubectl apply ...
+```
+
+### Step 4: Verify Deployment
+
+```bash
+# Health check
+curl -f https://production-url/health
+
+# Smoke test
+curl -f https://production-url/api/status
+```
+
+### Step 5: Update Status
+
+1. Move task to `deployed`
+2. Add comment: "✅ Deployed to production!"
+3. Update `workspace/agents/devops/WORKING.md`
+
+### Step 6: Git Commit
+
+```bash
+git add workspace/
+git commit -m "[DevOps] Deploy {task.title} to production"
+git push
+```
+
+### Step 7: Exit
+
+Tell user:
+```
+🎉 WORKFLOW COMPLETE!
+
+Task {task-id}: {task.title}
+Status: DEPLOYED ✅
+
+The feature is now live in production!
+```
+
+---
+
+## Deployment Checklist
+
+Before deploying:
+- [ ] PR is approved
+- [ ] All tests pass
+- [ ] QA has approved
+- [ ] No blocking issues
+
+After deploying:
+- [ ] Health check passes
+- [ ] Smoke test passes
+- [ ] No errors in logs
+- [ ] Metrics look normal
+
+---
+
+## Rollback (if needed)
+
+If deployment fails:
+```bash
+# Revert the merge commit
+git revert HEAD
+git push
+
+# Or rollback via cloud provider
+# az webapp deployment slot swap ...
+```
+
+Tell user deployment failed and needs manual intervention.
+
+---
+
+## Remember
+
+- **This is the final step**
+- **Verify deployment health**
+- **Celebrate! 🎉**
+- **No more agents to spawn - you're done!**

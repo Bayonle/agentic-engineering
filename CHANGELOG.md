@@ -5,6 +5,91 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-02-02
+
+### MAJOR REWRITE - True Fresh Context Architecture
+
+**Problem Solved**: Previous versions had fake Python code that pretended to spawn agents but actually ran everything in the same context, causing context bloat and hallucinations.
+
+**Solution**: Complete rewrite of all skills as pure **instructions for Claude** rather than Python code. The orchestrator now properly uses the actual Task tool to spawn agents in background.
+
+### Changed - All Skill Files Rewritten
+
+- **skills/work/SKILL.md**: Now pure instructions telling Claude to:
+  1. Read task status from filesystem
+  2. Determine next agent
+  3. **Use actual Task tool** with `run_in_background=true`
+  4. Exit immediately
+
+- **skills/pm/SKILL.md**: Instruction-based, no fake handoff code
+- **skills/architect/SKILL.md**: Instruction-based, no fake handoff code
+- **skills/engineer/SKILL.md**: Instruction-based, no fake handoff code
+- **skills/qa/SKILL.md**: Instruction-based, no fake handoff code
+- **skills/deploy/SKILL.md**: Instruction-based, final agent
+
+### How It Works Now
+
+```
+User: /work task-001
+
+Claude:
+  1. Reads: workspace/tasks/inbox/task-001.md
+  2. Determines: next agent = PM
+  3. Uses Task tool: spawn PM in background
+  4. Says: "PM spawned, monitor with tail -f..."
+  5. EXITS (context freed, ~1KB used)
+
+[PM runs in FRESH background context]
+[PM finishes, updates files, exits]
+
+User: /work task-001
+
+Claude:
+  1. Reads: workspace/tasks/in-planning/task-001.md
+  2. Determines: next agent = Architect
+  3. Uses Task tool: spawn Architect in background
+  4. EXITS (context freed)
+
+[Repeat until deployed]
+```
+
+### Key Principles
+
+1. **Skills are INSTRUCTIONS, not code**
+   - Skills tell Claude what to do
+   - Claude uses its actual tools (Read, Write, Bash, Task)
+   - No fake `use_task_tool()` functions
+
+2. **Orchestrator spawns and exits**
+   - `/work` reads status, spawns agent, exits
+   - User resumes with `/work task-id`
+   - Each invocation is ~1KB context
+
+3. **Agents do work and exit**
+   - Each agent reads what it needs
+   - Does its work
+   - Commits to git
+   - Updates status
+   - Exits (doesn't spawn next agent)
+
+4. **Communication via filesystem only**
+   - Task status in workspace/tasks/
+   - Agent memory in workspace/agents/
+   - Documents in workspace/docs/
+   - No context sharing between agents
+
+### Benefits
+
+✅ **Scalable**: 100+ step workflows without context bloat
+✅ **No hallucinations**: Each agent has fresh 10KB context
+✅ **Resumable**: Stop/start anytime, filesystem is truth
+✅ **Traceable**: Complete audit trail in files
+✅ **Debuggable**: Clear separation between agents
+
+### Migration
+
+No migration needed. Just update the plugin and run `/work task-id`.
+
 ## [1.2.3] - 2026-02-02
 
 ### Added

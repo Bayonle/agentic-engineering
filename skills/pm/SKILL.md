@@ -1,429 +1,191 @@
 ---
 name: pm
-description: PM Agent - Researches requirements, writes PRDs, manages product discovery and requirements gathering with auto-handoff to Architect
+description: PM Agent - Researches requirements, writes PRDs, manages product discovery
 ---
 
-# Product Manager Agent with Auto-Handoff
+# PM Agent
 
 **Trigger**: `/pm [task-id]`
-**Purpose**: Research, write PRD, auto-handoff to Architect
+
+## What This Skill Does
+
+When invoked, Claude acts as the PM agent:
+1. Finds or accepts a task
+2. Researches requirements (using qmd if available)
+3. Writes a comprehensive PRD
+4. Requests human approval
+5. Commits work to git
+6. Updates task status and exits
+
+**The orchestrator (`/work`) will spawn the next agent. PM does NOT spawn agents.**
 
 ---
 
-## What This Does
+## Instructions for Claude
 
-1. Auto-initialize workspace (first time only)
-2. Read memory (SOUL.md, WORKING.md)
-3. Pick up task from inbox
-4. Research requirements (with qmd if available)
-5. Write comprehensive PRD
-6. Request human approval
-7. Git commit (if enabled)
-8. **Auto-spawn Architect when approved**
+### Step 1: Initialize
+
+1. Check if `workspace/` exists in current directory
+2. If not, create it using the workspace template
+3. Import task_manager from the plugin's lib directory
+
+### Step 2: Find Task
+
+If task-id provided:
+- Use that task
+
+If no task-id:
+- Look in `workspace/tasks/inbox/` for available tasks
+- Pick the first one
+- If none found, tell user "No tasks in inbox"
+
+### Step 3: Assign and Move Task
+
+1. Assign task to 'pm'
+2. Move task to `in-discovery` status
+3. Add comment: "Starting discovery phase"
+4. Log activity
+
+### Step 4: Research (Optional)
+
+If qmd CLI is available:
+```bash
+qmd "{task.title} best practices"
+qmd "{task.title} security considerations"
+```
+
+If not available, skip and continue.
+
+### Step 5: Write PRD
+
+Create PRD at: `workspace/docs/specs/{task-id}-prd.md`
+
+PRD should include:
+- Problem statement
+- User stories with acceptance criteria
+- Functional requirements (P0, P1)
+- Non-functional requirements (performance, security, usability)
+- Technical considerations
+- Edge cases and error handling
+- Dependencies
+- Out of scope
+- Success metrics
+- Open questions
+
+### Step 6: Request Approval
+
+1. Add comment to task: "@human PRD ready for review"
+2. Tell user where to find PRD
+3. Tell user how to approve
+
+**IMPORTANT**: If this is a background agent, DO NOT poll for approval. Just request it and exit. The user will approve and run `/work task-id` to continue.
+
+If running interactively, you may poll for approval by checking task comments.
+
+### Step 7: After Approval
+
+1. Update `workspace/agents/pm/WORKING.md` with current state
+2. Move task to `in-planning` status
+3. Git commit the PRD:
+   ```bash
+   git add workspace/docs/specs/ workspace/agents/pm/ workspace/tasks/
+   git commit -m "[PM] Create PRD for {task.title}"
+   git push
+   ```
+
+### Step 8: Exit
+
+Tell user:
+```
+✅ PM work complete!
+
+PRD: workspace/docs/specs/{task-id}-prd.md
+Status: in-planning
+
+Resume workflow: /work {task-id}
+```
+
+**DO NOT spawn the next agent. Just exit.**
 
 ---
 
-## Implementation
+## File Locations
 
-```python
-import sys
-import os
-import time
-from datetime import datetime
-from pathlib import Path
-import shutil
+- **Task files**: `workspace/tasks/{status}/{task-id}.md`
+- **PRD output**: `workspace/docs/specs/{task-id}-prd.md`
+- **Agent memory**: `workspace/agents/pm/WORKING.md`
+- **Activity log**: `workspace/activity.log`
 
-# ============================================================================
-# PLUGIN INITIALIZATION - Auto-setup workspace
-# ============================================================================
+---
 
-def get_plugin_dir():
-    """Find the plugin directory"""
-    # When running as a skill, __file__ is available
-    if '__file__' in globals():
-        skill_file = Path(__file__).resolve()
-        return skill_file.parent.parent.parent  # skills/pm/SKILL.md -> plugin root
-    # Fallback to standard location
-    return Path.home() / '.claude/plugins/cache/agentic-workflow'
+## PRD Template
 
-def ensure_workspace():
-    """Initialize workspace in current project if it doesn't exist"""
-    cwd = Path.cwd()
-    workspace = cwd / 'workspace'
-
-    if workspace.exists():
-        return workspace
-
-    print("📦 First time setup: Creating agentic workspace...")
-    print("")
-
-    # Get plugin directory
-    plugin_dir = get_plugin_dir()
-    template = plugin_dir / 'lib/templates/workspace'
-
-    if template.exists():
-        # Copy full template
-        shutil.copytree(template, workspace)
-        print("✅ Workspace created from template")
-    else:
-        # Create minimal workspace structure
-        print("⚠️  Template not found, creating minimal workspace...")
-
-        # Create directory structure
-        dirs = [
-            'agents/pm', 'agents/architect', 'agents/engineer', 'agents/qa', 'agents/devops',
-            'tasks/inbox', 'tasks/in-discovery', 'tasks/in-planning',
-            'tasks/ready-to-build', 'tasks/in-progress',
-            'tasks/ready-for-testing', 'tasks/in-qa',
-            'tasks/ready-to-deploy', 'tasks/deployed',
-            'docs/specs', 'docs/plans', 'docs/qa-reports', 'docs/deployment-reports'
-        ]
-
-        for d in dirs:
-            (workspace / d).mkdir(parents=True, exist_ok=True)
-
-        # Copy SOUL templates from plugin assets
-        soul_mapping = {
-            'pm': 'pm', 'architect': 'architect', 'engineer': 'engineer',
-            'qa': 'qa', 'devops': 'deploy'
-        }
-
-        for agent, skill_name in soul_mapping.items():
-            soul_template = plugin_dir / f'skills/{skill_name}/assets/SOUL.md'
-            if soul_template.exists():
-                shutil.copy(soul_template, workspace / f'agents/{agent}/SOUL.md')
-
-        # Create empty activity log
-        (workspace / 'activity.log').touch()
-
-        print("✅ Minimal workspace created")
-
-    print(f"   Location: {workspace}")
-    print("")
-    print("Workspace structure:")
-    print("  workspace/")
-    print("    ├── agents/        # Agent memory (SOUL, WORKING)")
-    print("    ├── tasks/         # Task management")
-    print("    └── docs/          # PRDs, plans, reports")
-    print("")
-
-    return workspace
-
-# Initialize plugin
-PLUGIN_DIR = get_plugin_dir()
-LIB_DIR = PLUGIN_DIR / 'lib'
-sys.path.insert(0, str(LIB_DIR))
-
-# Ensure workspace exists
-workspace = ensure_workspace()
-project_root = workspace.parent
-
-# Import after path is set
-from task_manager import get_task_manager
-from activity import log_activity
-
-# ============================================================================
-# PM AGENT LOGIC
-# ============================================================================
-
-# Get task ID from args or find work
-if len(args) > 0:
-    task_id = args[0]
-else:
-    # Find work
-    tm = get_task_manager('workspace')
-    task = tm.find_work('pm')
-    if not task:
-        print("📭 No work found in inbox")
-        print("")
-        print("Create a task with:")
-        print(f"  echo 'Task description' > workspace/tasks/inbox/task-001.md")
-        return
-    task_id = task.id
-
-print(f"🤖 PM Agent starting work on: {task_id}")
-print("")
-
-# Step 1: Read Memory
-print("📖 Reading memory...")
-soul = read_file('workspace/agents/pm/SOUL.md')
-working = read_file('workspace/agents/pm/WORKING.md')
-print("✓ Memory loaded")
-print("")
-
-# Step 2: Assign task
-print("📋 Assigning task to PM...")
-tm = get_task_manager('workspace')
-task = tm.find_task(task_id)
-
-tm.assign_task(task_id, 'pm')
-tm.move_task(task_id, 'in-discovery')
-tm.add_comment(task_id, 'pm', f'Starting discovery phase for: {task.title}')
-log_activity('pm', f'Started discovery on {task_id}')
-
-print(f"✓ Task assigned and moved to in-discovery")
-print("")
-
-# Step 3: Research Requirements
-print("🔍 Researching requirements...")
-print(f"   Task: {task.title}")
-print(f"   Description: {task.description}")
-print("")
-
-# Use qmd for quick documentation research
-print("📚 Searching documentation with qmd...")
-research_queries = [
-    f"{task.title} best practices",
-    f"{task.title} security considerations"
-]
-
-for query in research_queries[:1]:  # Just do one quick search
-    print(f"   🔎 {query}")
-    result = os.popen(f'qmd "{query}" 2>/dev/null | head -20').read()
-    if result.strip():
-        print(f"   ✓ Found relevant docs")
-    else:
-        print(f"   ℹ️  No docs found (qmd may not be installed)")
-    break
-
-print("")
-print("✓ Research complete")
-print("")
-
-# Step 4: Write PRD
-print("📝 Writing PRD...")
-
-prd_filename = f"{task_id}-prd.md"
-prd_content = f"""---
+```markdown
+---
 feature: {task.title}
 status: draft
-created: {datetime.now().strftime('%Y-%m-%d')}
+created: {date}
 author: PM Agent
-task_id: {task_id}
-priority: {task.priority}
+task_id: {task-id}
 ---
 
 # {task.title}
 
 ## Problem Statement
-
 {task.description}
 
 ## User Stories
 
-### Story 1: User wants to {task.title.lower()}
+### Story 1
 **As a** user
-**I want** to {task.title.lower()}
-**So that** I can achieve the goal
+**I want** to {action}
+**So that** I can {benefit}
 
 **Acceptance Criteria:**
-- [ ] Feature works as described
-- [ ] Error handling is in place
-- [ ] Tests are written
-- [ ] Documentation is updated
+- [ ] Criterion 1
+- [ ] Criterion 2
 
 ## Functional Requirements
 
 ### Must Have (P0)
-1. Core functionality as described in problem statement
+1. Core functionality
 2. Basic error handling
-3. User feedback on success/failure
 
 ### Should Have (P1)
 1. Input validation
-2. Comprehensive error messages
+2. Better error messages
 
 ## Non-Functional Requirements
 
 ### Performance
-- Response time < 2 seconds for typical operations
+- Response time < 2s
 
 ### Security
 - Input sanitization
-- Authentication/authorization as needed
-- Follow OWASP best practices
-
-### Usability
-- Clear user feedback
-- Intuitive interface
+- Authentication as needed
 
 ## Technical Considerations
-- Use existing patterns in codebase
-- Follow language/framework conventions
-- Best practices for the technology stack
+- Use existing patterns
+- Follow conventions
 
-## Edge Cases & Error Handling
-1. **Invalid input**: Validate and return clear error message
-2. **Network failure**: Retry with exponential backoff
-3. **Concurrent access**: Handle with appropriate locking
-
-## Dependencies
-- **External**: None identified yet
-- **Internal**: Existing project infrastructure
+## Edge Cases
+1. Invalid input
+2. Network failure
 
 ## Out of Scope
-- Advanced features not in initial requirements
-- Performance optimization (future iteration)
+- Future features
 
 ## Success Metrics
-- Feature deployed without incidents
-- User acceptance criteria met
-- Code review approved
-
-## Open Questions
-- Any specific performance requirements?
-- Special security considerations?
-"""
-
-write_file(f'workspace/docs/specs/{prd_filename}', prd_content)
-
-tm.update_task(task_id, prd=f'docs/specs/{prd_filename}')
-tm.add_comment(task_id, 'pm', f'PRD created: workspace/docs/specs/{prd_filename}')
-log_activity('pm', f'Created PRD for {task_id}')
-
-print(f"✓ PRD written to: workspace/docs/specs/{prd_filename}")
-print("")
-
-# Step 5: Request Approval
-print("👤 Requesting human approval...")
-tm.add_comment(
-    task_id,
-    'pm',
-    f"""@human PRD ready for review
-
-**PRD Location**: workspace/docs/specs/{prd_filename}
-
-Please review and approve to proceed with technical planning.
-
-**To approve**: Add comment with "approved" or "PRD approved"
-**To request changes**: Add comment with your feedback
-"""
-)
-
-print("")
-print("="*60)
-print("⏸️  WAITING FOR HUMAN APPROVAL")
-print("="*60)
-print("")
-print(f"📄 Review PRD: cat workspace/docs/specs/{prd_filename}")
-print("")
-print("Approve with:")
-print(f'  python3 << \'EOF\'')
-print(f'  import sys')
-print(f'  sys.path.append("workspace/../{LIB_DIR}")')
-print(f'  from task_manager import get_task_manager')
-print(f'  tm = get_task_manager("workspace")')
-print(f'  tm.add_comment("{task_id}", "human", "PRD approved!")')
-print(f'  EOF')
-print("")
-print("Or just tell Claude: 'I approve the PRD for {task_id}'")
-print("")
-
-# Step 6: Poll for Approval
-print("⏳ Polling for approval (checking every 5 minutes)...")
-print("")
-
-approved = False
-while not approved:
-    task = tm.find_task(task_id)
-
-    # Check recent comments for approval
-    if task.thread:
-        recent_comments = task.thread[-5:]  # Last 5 comments
-        for comment in recent_comments:
-            if comment['agent'] == 'human':
-                message = comment['message'].lower()
-                if 'approve' in message or 'approved' in message:
-                    if 'prd' in message or 'approved!' in message:
-                        approved = True
-                        print("✅ PRD APPROVED!")
-                        break
-
-    if not approved:
-        print(f"⏳ Still waiting... (checked {datetime.now().strftime('%H:%M')})")
-        time.sleep(300)  # 5 minutes
-
-print("")
-
-# Step 7: Update Memory
-print("💾 Updating memory...")
-
-working_content = f"""# WORKING — Current State
-
-**Last Updated:** {datetime.now().isoformat()[:16]}
+- Feature deployed
+- User acceptance met
+```
 
 ---
 
-## Current Task
+## Remember
 
-**Task ID:** {task_id}
-**Title:** {task.title}
-**Status:** PRD approved, handing off to Architect
-
-## Progress
-- [x] Found task in inbox
-- [x] Assigned to self
-- [x] Moved to in-discovery
-- [x] Researched requirements
-- [x] Wrote PRD
-- [x] Received approval
-- [ ] Hand off to architect
-
-## Quick Resume
-PRD approved for {task.title}. Spawning Architect agent for technical planning.
-"""
-
-write_file('workspace/agents/pm/WORKING.md', working_content)
-log_activity('pm', f'PRD approved for {task_id}, handing off to architect')
-
-print("✓ Memory updated")
-print("")
-
-# Step 8: Git Commit
-print("📦 Committing work to git...")
-
-# Check if git is available
-git_check = os.system('git rev-parse --git-dir >/dev/null 2>&1')
-if git_check == 0:
-    # Stage PM's files
-    os.system('git add workspace/docs/specs/ workspace/agents/pm/WORKING.md workspace/tasks/')
-
-    # Create commit with agent attribution
-    commit_msg = f"[PM] Create PRD for {task.title}"
-    commit_cmd = f'''git commit -m "$(cat <<'EOF'
-{commit_msg}
-
-Created PRD: workspace/docs/specs/{prd_filename}
-
-Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
-EOF
-)"'''
-    os.system(commit_cmd)
-
-    # Push to remote
-    os.system('git push')
-
-    log_activity('pm', f'Committed and pushed: {commit_msg}')
-    print(f"✓ Committed: {commit_msg}")
-else:
-    log_activity('pm', 'WARNING: Not a git repository, skipping commit')
-    print("⚠️  Not a git repository, skipping commit")
-
-print("")
-
-# Step 9: Mark Ready for Next Phase
-print("="*60)
-print("✅ PM WORK COMPLETE")
-print("="*60)
-print("")
-
-# Move task to planning (ready for architect)
-tm.move_task(task_id, 'in-planning')
-tm.add_comment(task_id, 'pm', 'PRD complete. Ready for technical planning.')
-
-print("✅ Task moved to in-planning")
-print("✅ PRD ready for Architect to pick up")
-print("")
-print("Next: Orchestrator will spawn Architect in fresh context")
-print("")
-```
+- **Do your work and exit**
+- **Don't spawn other agents**
+- **Commit your work to git**
+- **Update task status before exiting**
+- **The orchestrator handles workflow progression**
