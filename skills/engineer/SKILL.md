@@ -136,23 +136,16 @@ else:
     print("⚠️  Not a git repository, skipping commit")
 print("")
 
-# AUTO-HANDOFF to QA
+# Mark ready for testing
 print("="*60)
-print("🚀 AUTO-HANDOFF TO QA")
+print("✅ ENGINEER WORK COMPLETE")
 print("="*60)
 print("")
 
 tm.move_task(task_id, 'ready-for-testing')
-tm.assign_task(task_id, 'qa')
-tm.add_comment(task_id, 'engineer', '@qa Implementation complete. Ready for testing.')
+tm.add_comment(task_id, 'engineer', 'Implementation complete. Ready for testing.')
 
-use_task_tool(
-    subagent_type="general-purpose",
-    description=f"QA tests {task_id}",
-    prompt=f"Execute /qa {task_id}",
-    run_in_background=True
-)
-
-print("✅ Engineer work complete!")
-print("✅ QA agent spawned in background")
+print("✅ Task moved to ready-for-testing")
+print("✅ Code ready for QA to pick up")
+print("")
 ```

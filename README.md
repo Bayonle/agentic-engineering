@@ -8,10 +8,40 @@ Full software development lifecycle automation with git commits, documentation s
 
 ---
 
+## Architecture
+
+**Fresh Context Design (v1.2.0)**: Each agent runs in isolated background context for scalability and accuracy.
+
+```
+/work orchestrator
+  ↓
+  Spawns PM (Task tool, fresh context) → PRD → Exit
+  ↓ (monitors completion)
+  Spawns Architect (fresh context) → Plan → Exit
+  ↓
+  Spawns Engineer (fresh context) → Code → Exit
+  ↓
+  Spawns QA (fresh context) → Tests → Exit
+  ↓
+  Spawns DevOps (fresh context) → Deploy → Exit
+  ↓
+  Complete!
+```
+
+**Why Fresh Context?**
+- ✅ **Scalable**: Handles 100+ step workflows without context bloat
+- ✅ **Accurate**: Fresh context prevents hallucinations in long tasks
+- ✅ **Resumable**: Pick up from any phase if interrupted
+- ✅ **Traceable**: Complete file-based audit trail
+- ✅ **Clean**: Agents communicate only via filesystem
+
+---
+
 ## Features
 
 ✅ **5 Autonomous Agents** - PM, Architect, Engineer, QA, DevOps
-✅ **Auto-Handoff** - Agents spawn next agent automatically
+✅ **Fresh Context Architecture** - Each agent in isolated background context
+✅ **Resume Capability** - Pick up from any phase
 ✅ **Git Commits** - Each phase commits work automatically
 ✅ **Documentation Search** - Integrated qmd CLI for research
 ✅ **Task Management** - File-based task tracking
@@ -70,12 +100,14 @@ echo "Add user authentication" > workspace/tasks/inbox/task-001.md
 /work task-001
 ```
 
-That's it! The workflow will:
-- PM researches and writes PRD (you approve)
-- Architect designs solution (you approve)
-- Engineer implements code
-- QA tests feature
-- DevOps deploys (you approve)
+That's it! The orchestrator will:
+- Spawn PM in background → writes PRD (you approve)
+- Resume: `/work task-001` → spawns Architect → designs solution (you approve)
+- Resume: `/work task-001` → spawns Engineer → implements code
+- Resume: `/work task-001` → spawns QA → tests feature (you approve deployment)
+- Resume: `/work task-001` → spawns DevOps → deploys to production
+
+**Each agent runs in fresh context for accuracy and scalability!**
 
 ### 3. Or Run Individual Agents
 

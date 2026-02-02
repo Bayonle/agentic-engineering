@@ -411,42 +411,19 @@ else:
 
 print("")
 
-# Step 9: AUTO-HANDOFF to Architect
+# Step 9: Mark Ready for Next Phase
 print("="*60)
-print("🚀 AUTO-HANDOFF TO ARCHITECT")
+print("✅ PM WORK COMPLETE")
 print("="*60)
 print("")
 
-# Move task to planning
+# Move task to planning (ready for architect)
 tm.move_task(task_id, 'in-planning')
-tm.assign_task(task_id, 'architect')
-tm.add_comment(task_id, 'pm', '@architect PRD approved. Please create technical plan.')
+tm.add_comment(task_id, 'pm', 'PRD complete. Ready for technical planning.')
 
-print("Spawning Architect agent in background (FRESH CONTEXT)...")
+print("✅ Task moved to in-planning")
+print("✅ PRD ready for Architect to pick up")
 print("")
-
-# Use Task tool to spawn Architect
-use_task_tool(
-    subagent_type="general-purpose",
-    description=f"Architect designs implementation for {task_id}",
-    prompt=f"""
-You are the Architect agent working on task {task_id}.
-
-IMPORTANT: Stay in current directory (project already set up):
-Current directory has agentic workspace ready.
-
-Execute the architect skill with auto-handoff:
-/architect {task_id}
-
-The /architect skill has auto-handoff built in.
-""",
-    run_in_background=True
-)
-
-print("✅ PM work complete!")
-print(f"✅ Architect agent spawned in background")
+print("Next: Orchestrator will spawn Architect in fresh context")
 print("")
-print("Next: Architect will design solution and request your approval")
-print("")
-print("Monitor: tail -f workspace/activity.log")
 ```

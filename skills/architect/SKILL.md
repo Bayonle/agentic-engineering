@@ -82,16 +82,14 @@ EOF
        os.system('git push')
    ```
 
-8. **Spawn Engineer:**
+8. **Mark ready for implementation:**
    ```python
-   use_task_tool(
-       subagent_type="general-purpose",
-       description=f"Engineer implements {task_id}",
-       prompt=f"Execute /engineer {task_id}",
-       run_in_background=True
-   )
+   tm.move_task(task_id, 'ready-to-build')
+   tm.add_comment(task_id, 'architect', 'Technical plan complete. Ready for implementation.')
+   print("✅ Architect work complete!")
+   print("✅ Task moved to ready-to-build")
    ```
 
 ---
 
-**Remember:** Fresh context for Engineer = separate background invocation!
+**Remember:** Just do the work and exit. Orchestrator handles spawning next agent!

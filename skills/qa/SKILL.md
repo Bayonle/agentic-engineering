@@ -102,14 +102,15 @@ while not approved:
     if not approved:
         time.sleep(300)
 
-# AUTO-HANDOFF to DevOps
-tm.assign_task(task_id, 'devops')
-use_task_tool(
-    subagent_type="general-purpose",
-    description=f"DevOps deploys {task_id}",
-    prompt=f"Execute /deploy {task_id}",
-    run_in_background=True
-)
+# Mark ready for deployment
+print("="*60)
+print("✅ QA WORK COMPLETE")
+print("="*60)
+print("")
 
-print("✅ QA work complete!")
+print("✅ Task moved to ready-to-deploy")
+print("✅ Feature ready for DevOps to deploy")
+print("")
+
+# EXIT HERE - orchestrator will spawn DevOps
 ```
