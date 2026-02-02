@@ -1,238 +1,230 @@
 ---
 name: work
-description: Smart workflow orchestrator - spawns agents in fresh background contexts
+description: Workflow orchestrator - spawns agents in fresh background contexts using Claude Code's native subagent system
 ---
 
 # Workflow Orchestrator
 
 **Trigger**: `/work task-id`
 
-## CRITICAL: How This Skill Works
+## How This Works
 
-This skill provides **instructions for Claude** to orchestrate agents. When invoked:
-
-1. Claude reads task status from filesystem
-2. Claude determines which agent should run next
-3. **Claude uses the ACTUAL Task tool** to spawn that agent in background
-4. Claude exits immediately (orchestrator done)
+This skill instructs Claude to:
+1. Read task status from filesystem
+2. Determine which agent should run next
+3. **Spawn that agent in background** using the Task tool
+4. Exit immediately (orchestrator done)
 5. User resumes later with `/work task-id`
 
-**THIS IS NOT PYTHON CODE THAT RUNS - IT'S INSTRUCTIONS FOR CLAUDE TO FOLLOW**
+## Available Subagents
+
+This plugin provides proper Claude Code subagents in `agents/`:
+
+| Agent | When Used | What It Does |
+|-------|-----------|--------------|
+| `pm-agent` | Task in `inbox` | Writes business-focused PRD |
+| `architect-agent` | Task in `in-planning` | Creates technical plan |
+| `engineer-agent` | Task in `ready-to-build` | Implements on feature branch |
+| `qa-agent` | Task in `ready-for-testing` | Tests and generates report |
+| `devops-agent` | Task in `ready-to-deploy` | Deploys to production |
 
 ---
 
 ## Step 1: Read Task Status
 
-When `/work {task-id}` is invoked, Claude should:
+Check where the task is in the workflow:
 
-1. Read the task file: `workspace/tasks/*/{task-id}.md`
-2. Extract the current status
-3. If task not found, tell user and stop
+```bash
+# Find the task
+ls workspace/tasks/*/task-{id}.md
+```
 
-```
-Read workspace/tasks/inbox/{task-id}.md
-  OR workspace/tasks/in-planning/{task-id}.md
-  OR workspace/tasks/ready-to-build/{task-id}.md
-  OR etc...
-```
+Status locations:
+- `workspace/tasks/inbox/` → PM
+- `workspace/tasks/in-planning/` → Architect
+- `workspace/tasks/ready-to-build/` → Engineer
+- `workspace/tasks/ready-for-testing/` → QA
+- `workspace/tasks/ready-to-deploy/` → DevOps
+- `workspace/tasks/deployed/` → DONE!
 
 ---
 
-## Step 2: Determine Next Agent
+## Step 2: Spawn the Right Agent
 
-Map status to agent:
+**Use the Task tool to spawn the appropriate subagent in background:**
 
-| Task Status | Next Agent | What They Do |
-|-------------|------------|--------------|
-| `inbox` | PM | Write PRD |
-| `in-discovery` | PM | Continue PRD |
-| `in-planning` | Architect | Write technical plan |
-| `ready-to-build` | Engineer | Implement code |
-| `in-progress` | Engineer | Continue implementation |
-| `ready-for-testing` | QA | Test feature |
-| `in-qa` | QA | Continue testing |
-| `ready-to-deploy` | DevOps | Deploy to production |
-| `deployed` | NONE | Workflow complete! |
+### If task is in `inbox` → Spawn PM Agent
 
----
-
-## Step 3: SPAWN AGENT (Use Task Tool)
-
-**THIS IS THE CRITICAL PART - Claude must use the actual Task tool**
-
-After determining the next agent, Claude should invoke the Task tool like this:
-
-### For PM Agent:
 ```
-Use Task tool with:
-  subagent_type: "general-purpose"
-  description: "PM agent writes PRD for {task-id}"
+Task tool:
+  subagent_type: "pm-agent"
+  description: "PM writes PRD for {task-id}"
   run_in_background: true
   prompt: |
-    You are the PM agent. Work in the current directory.
+    Work on task {task-id}.
 
-    Execute: /pm {task-id}
-
-    Do your work, commit, and exit. The orchestrator will spawn the next agent.
+    1. Read the task from workspace/tasks/inbox/{task-id}.md
+    2. Research the domain
+    3. Write business-focused PRD to workspace/docs/specs/{task-id}-prd.md
+    4. Request human approval
+    5. After approval: commit, move task to in-planning, exit
 ```
 
-### For Architect Agent:
+### If task is in `in-planning` → Spawn Architect Agent
+
 ```
-Use Task tool with:
-  subagent_type: "general-purpose"
-  description: "Architect designs solution for {task-id}"
+Task tool:
+  subagent_type: "architect-agent"
+  description: "Architect designs {task-id}"
   run_in_background: true
   prompt: |
-    You are the Architect agent. Work in the current directory.
+    Work on task {task-id}.
 
-    Execute: /architect {task-id}
-
-    Do your work, commit, and exit. The orchestrator will spawn the next agent.
+    1. Read PRD from workspace/docs/specs/{task-id}-prd.md
+    2. Design technical solution
+    3. Write plan to workspace/docs/plans/{task-id}-plan.md
+    4. Request human approval
+    5. After approval: commit, move task to ready-to-build, exit
 ```
 
-### For Engineer Agent:
+### If task is in `ready-to-build` → Spawn Engineer Agent
+
 ```
-Use Task tool with:
-  subagent_type: "general-purpose"
+Task tool:
+  subagent_type: "engineer-agent"
   description: "Engineer implements {task-id}"
   run_in_background: true
   prompt: |
-    You are the Engineer agent. Work in the current directory.
+    Work on task {task-id}.
 
-    Execute: /engineer {task-id}
-
-    Do your work, commit, and exit. The orchestrator will spawn the next agent.
+    1. Create feature branch: feature/{task-id}
+    2. Read plan from workspace/docs/plans/{task-id}-plan.md
+    3. Implement the code
+    4. Write tests
+    5. Commit, push, create PR
+    6. Move task to ready-for-testing, exit
 ```
 
-### For QA Agent:
+### If task is in `ready-for-testing` → Spawn QA Agent
+
 ```
-Use Task tool with:
-  subagent_type: "general-purpose"
+Task tool:
+  subagent_type: "qa-agent"
   description: "QA tests {task-id}"
   run_in_background: true
   prompt: |
-    You are the QA agent. Work in the current directory.
+    Work on task {task-id}.
 
-    Execute: /qa {task-id}
-
-    Do your work, commit, and exit. The orchestrator will spawn the next agent.
+    1. Run tests
+    2. Use agent-browser for UI testing if available
+    3. Write test report to workspace/docs/qa-reports/{task-id}-test-report.md
+    4. Request deployment approval
+    5. After approval: commit, move task to ready-to-deploy, exit
 ```
 
-### For DevOps Agent:
+### If task is in `ready-to-deploy` → Spawn DevOps Agent
+
 ```
-Use Task tool with:
-  subagent_type: "general-purpose"
+Task tool:
+  subagent_type: "devops-agent"
   description: "DevOps deploys {task-id}"
   run_in_background: true
   prompt: |
-    You are the DevOps agent. Work in the current directory.
+    Work on task {task-id}.
 
-    Execute: /deploy {task-id}
-
-    Do your work and commit. This is the final phase.
+    1. Merge the PR
+    2. Deploy to production
+    3. Verify health
+    4. Move task to deployed
+    5. Exit - workflow complete!
 ```
+
+### If task is in `deployed` → Done!
+
+Tell user: "Task {task-id} is already deployed! 🎉"
 
 ---
 
-## Step 4: Exit Immediately
+## Step 3: Exit Immediately
 
-After spawning the agent, Claude should:
+After spawning the agent, tell the user:
 
-1. Tell the user the agent was spawned
-2. Provide monitoring commands
-3. **STOP** - do not wait, do not continue
-
-Example response:
 ```
-✅ Spawned PM agent in background for task-001
+✅ Spawned {agent} in background for {task-id}
+
+The agent is working in a FRESH context.
 
 Monitor progress:
   tail -f workspace/activity.log
-  cat workspace/agents/pm/WORKING.md
+  cat workspace/agents/{agent}/WORKING.md
 
 Resume workflow after approval:
-  /work task-001
+  /work {task-id}
 ```
+
+**DO NOT WAIT for the agent. Just spawn and exit.**
 
 ---
 
-## Workflow Pattern
+## The Pattern
 
 ```
 User: /work task-001
-
-Claude:
-  1. Reads task status → "inbox"
-  2. Determines next agent → PM
-  3. Uses Task tool (run_in_background=true) → Spawns PM
-  4. Tells user: "PM spawned, monitor with..."
-  5. DONE (exits, context freed)
-
-[PM works in fresh background context]
-[PM finishes, updates files, exits]
-
+         ↓
+Claude (main): Reads status → inbox
+Claude (main): Spawns pm-agent in background
+Claude (main): Says "PM spawned" and EXITS
+         ↓
+[pm-agent works in FRESH background context]
+[pm-agent finishes, exits]
+         ↓
 User: /work task-001
-
-Claude:
-  1. Reads task status → "in-planning"
-  2. Determines next agent → Architect
-  3. Uses Task tool → Spawns Architect
-  4. Tells user: "Architect spawned..."
-  5. DONE
-
+         ↓
+Claude (main): Reads status → in-planning
+Claude (main): Spawns architect-agent in background
+Claude (main): EXITS
+         ↓
 [Repeat until deployed]
 ```
 
 ---
 
-## Why This Pattern?
+## Why Background Subagents?
 
-**Fresh Context Each Time:**
-- Orchestrator: ~1KB context (just reads status, spawns, exits)
-- Each agent: Fresh ~10KB context (reads only what it needs)
-- No accumulation, no hallucinations
+From Claude Code docs:
+> "Background subagents run concurrently while you continue working."
 
-**Resume Capable:**
-- User can stop anytime
-- Run `/work task-id` to continue
-- Status read from filesystem, not memory
-
-**Scalable:**
-- Works for 100+ step workflows
-- Each step is isolated
+Benefits:
+- **Fresh context** - Each agent starts clean (~10KB not ~100KB)
+- **No hallucinations** - Clean context prevents confusion
+- **Resumable** - Can stop/start anytime
+- **Parallel work** - User can do other things while agent works
 
 ---
 
-## Common Mistakes to Avoid
+## Key Points
 
-❌ **Don't**: Write Python code that calls `use_task_tool()` - that function doesn't exist
-❌ **Don't**: Wait for the agent to complete - spawn and exit immediately
-❌ **Don't**: Keep context open while agent works - that defeats the purpose
-❌ **Don't**: Try to chain agents within one context
-
-✅ **Do**: Use the actual Task tool that Claude has access to
-✅ **Do**: Set `run_in_background: true`
-✅ **Do**: Exit immediately after spawning
-✅ **Do**: Let user resume with `/work task-id`
+1. **Subagents cannot spawn subagents** - Only main conversation can spawn
+2. **Orchestrator spawns and exits** - Don't wait for agent to complete
+3. **User resumes with /work** - Each invocation is fresh
+4. **Filesystem is truth** - Agents communicate via files only
 
 ---
 
-## Monitoring Commands
-
-After spawning an agent, tell the user:
+## Monitoring
 
 ```bash
-# Watch all activity
+# Watch activity
 tail -f workspace/activity.log
 
-# Check specific agent
+# Check agent status
 cat workspace/agents/pm/WORKING.md
 cat workspace/agents/architect/WORKING.md
 cat workspace/agents/engineer/WORKING.md
 cat workspace/agents/qa/WORKING.md
 cat workspace/agents/devops/WORKING.md
 
-# Check task status
+# Check task location
 ls workspace/tasks/*/
 
 # Resume workflow

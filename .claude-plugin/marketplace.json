@@ -13,7 +13,7 @@
       "name": "agentic-workflow",
       "source": "./",
       "description": "Autonomous multi-agent SDLC workflow system. PM writes PRDs, Architect designs solutions, Engineer implements code, QA tests features, DevOps deploys to production. Includes quick task creation with /task command.",
-      "version": "1.3.0",
+      "version": "2.0.0",
       "author": {
         "name": "Bayonle Amzat"
       },

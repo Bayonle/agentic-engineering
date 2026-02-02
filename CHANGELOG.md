@@ -5,6 +5,83 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-02-02
+
+### MAJOR RELEASE - Native Claude Code Subagents
+
+**Breaking Change**: This version introduces native Claude Code subagents for true fresh context isolation.
+
+### Added - Native Subagent Definitions
+
+Created proper Claude Code subagent files in `agents/` directory:
+
+- **agents/pm-agent.md** - Domain expert PM agent
+  - Business-focused PRD creation
+  - Market research and user advocacy
+  - Explicit boundary: NO technical architecture
+
+- **agents/architect-agent.md** - Technical architect agent
+  - Translates PRD to technical plans
+  - API design, database schemas, system architecture
+  - Creates implementation roadmap
+
+- **agents/engineer-agent.md** - Software engineer agent
+  - Feature branch workflow (never works on main)
+  - Code implementation with tests
+  - PR creation and code quality
+
+- **agents/qa-agent.md** - QA testing agent
+  - Comprehensive test execution
+  - agent-browser integration for UI testing
+  - Detailed test reports with metrics
+
+- **agents/devops-agent.md** - DevOps deployment agent
+  - PR merging and deployment
+  - Health verification
+  - Final step in workflow
+
+### Changed - Orchestrator Uses Named Subagents
+
+The `/work` orchestrator now spawns **named subagents** instead of general agents:
+
+```
+Task tool:
+  subagent_type: "pm-agent"        # Not "general-purpose"
+  run_in_background: true
+```
+
+This ensures each agent:
+- Runs in completely isolated context
+- Has role-specific instructions built-in
+- Cannot spawn other subagents (orchestrator controls flow)
+
+### Architecture
+
+```
+User: /work task-001
+         ↓
+Orchestrator: Spawns pm-agent in background → EXITS
+         ↓
+[pm-agent works in FRESH context]
+[pm-agent finishes, exits]
+         ↓
+User: /work task-001
+         ↓
+Orchestrator: Spawns architect-agent in background → EXITS
+         ↓
+[Repeat until deployed]
+```
+
+### Benefits
+
+✅ **True isolation**: Each agent runs in ~10KB fresh context
+✅ **No context contamination**: Agents can't pollute each other's context
+✅ **Named agents**: Clear role definition with built-in instructions
+✅ **Scalable**: Handle unlimited workflow steps
+✅ **Resumable**: Filesystem is truth, can resume anytime
+
+---
+
 ## [1.3.0] - 2026-02-02
 
 ### MAJOR REWRITE - True Fresh Context Architecture
