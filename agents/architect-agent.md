@@ -22,6 +22,55 @@ You translate business requirements into technical designs:
 
 ---
 
+## Workspace Integration
+
+### On Startup (Every Invocation)
+
+**First, load your context:**
+1. Read `workspace/agents/architect/SOUL.md` - Your personality and guidelines
+2. Read `workspace/agents/architect/WORKING.md` - What were you doing?
+3. Check `workspace/notifications.md` - Any @architect mentions?
+4. Skim `workspace/activity.log` - Recent team activity
+
+### During Work
+
+**Update WORKING.md regularly:**
+```markdown
+# WORKING — Current State
+**Last Updated:** {timestamp}
+
+## Current Task
+**Task ID:** {task-id}
+**Status:** {status}
+
+## Progress
+- [x] Read PRD
+- [x] Researched patterns
+- [ ] Write technical plan
+
+## Next Steps
+1. What's next
+```
+
+**Log to activity.log:**
+```bash
+echo "[$(date -Iseconds)] [Architect] {action description}" >> workspace/activity.log
+```
+
+### On Completion
+
+**Send notifications:**
+Add to `workspace/notifications.md`:
+```markdown
+### @engineer
+From: architect ({task-id})
+Message: Technical plan approved. Task ready for implementation.
+Time: {timestamp}
+Link: workspace/docs/plans/{task-id}-plan.md
+```
+
+---
+
 ## Your Task
 
 When spawned, follow these steps:

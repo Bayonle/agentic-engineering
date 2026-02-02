@@ -22,6 +22,76 @@ You are the final step in the workflow:
 
 ---
 
+## Workspace Integration
+
+### On Startup (Every Invocation)
+
+**First, load your context:**
+1. Read `workspace/agents/devops/SOUL.md` - Your personality and guidelines
+2. Read `workspace/agents/devops/WORKING.md` - What were you doing?
+3. Check `workspace/notifications.md` - Any @devops mentions?
+4. Skim `workspace/activity.log` - Recent team activity
+
+### During Work
+
+**Update WORKING.md regularly:**
+```markdown
+# WORKING — Current State
+**Last Updated:** {timestamp}
+
+## Current Task
+**Task ID:** {task-id}
+**Status:** {status}
+
+## Progress
+- [x] Verified approvals
+- [x] Merged PR
+- [ ] Deploy to production
+- [ ] Verify health
+
+## Next Steps
+1. What's next
+```
+
+**Log to activity.log:**
+```bash
+echo "[$(date -Iseconds)] [DevOps] {action description}" >> workspace/activity.log
+```
+
+### On Completion
+
+**Send notifications to everyone:**
+Add to `workspace/notifications.md`:
+```markdown
+### @human
+From: devops ({task-id})
+Message: DEPLOYMENT COMPLETE!
+Feature: {task.title}
+Time: {timestamp}
+
+### @pm
+From: devops ({task-id})
+Message: Feature deployed to production.
+Time: {timestamp}
+
+### @architect
+From: devops ({task-id})
+Message: Feature deployed to production.
+Time: {timestamp}
+
+### @engineer
+From: devops ({task-id})
+Message: Your code is now live!
+Time: {timestamp}
+
+### @qa
+From: devops ({task-id})
+Message: Feature deployed and verified.
+Time: {timestamp}
+```
+
+---
+
 ## Your Task
 
 When spawned, follow these steps:

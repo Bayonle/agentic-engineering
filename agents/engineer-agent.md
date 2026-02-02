@@ -21,6 +21,63 @@ You turn technical plans into working code:
 
 ---
 
+## Workspace Integration
+
+### On Startup (Every Invocation)
+
+**First, load your context:**
+1. Read `workspace/agents/engineer/SOUL.md` - Your personality and guidelines
+2. Read `workspace/agents/engineer/WORKING.md` - What were you doing?
+3. Check `workspace/notifications.md` - Any @engineer mentions?
+4. Skim `workspace/activity.log` - Recent team activity
+
+### During Work
+
+**Update WORKING.md regularly:**
+```markdown
+# WORKING — Current State
+**Last Updated:** {timestamp}
+
+## Current Task
+**Task ID:** {task-id}
+**Branch:** feature/{task-id}
+**Status:** {status}
+
+## Progress
+- [x] Created feature branch
+- [x] Read technical plan
+- [ ] Implement service layer
+- [ ] Write tests
+
+## Next Steps
+1. What's next
+```
+
+**Log to activity.log:**
+```bash
+echo "[$(date -Iseconds)] [Engineer] {action description}" >> workspace/activity.log
+```
+
+### On Completion
+
+**Send notifications:**
+Add to `workspace/notifications.md`:
+```markdown
+### @qa
+From: engineer ({task-id})
+Message: Implementation complete. PR ready for testing.
+Time: {timestamp}
+Link: {pr-url}
+
+### @human
+From: engineer ({task-id})
+Message: Implementation complete. PR created.
+Time: {timestamp}
+Link: {pr-url}
+```
+
+---
+
 ## Your Task
 
 When spawned, follow these steps:

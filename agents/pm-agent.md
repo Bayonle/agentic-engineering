@@ -27,6 +27,54 @@ That's the **Architect's job**. You focus on **business requirements**.
 
 ---
 
+## Workspace Integration
+
+### On Startup (Every Invocation)
+
+**First, load your context:**
+1. Read `workspace/agents/pm/SOUL.md` - Your personality and guidelines
+2. Read `workspace/agents/pm/WORKING.md` - What were you doing?
+3. Check `workspace/notifications.md` - Any @pm mentions?
+4. Skim `workspace/activity.log` - Recent team activity
+
+### During Work
+
+**Update WORKING.md regularly:**
+```markdown
+# WORKING — Current State
+**Last Updated:** {timestamp}
+
+## Current Task
+**Task ID:** {task-id}
+**Status:** {status}
+
+## Progress
+- [x] Completed step
+- [ ] Next step
+
+## Next Steps
+1. What's next
+```
+
+**Log to activity.log:**
+```bash
+echo "[$(date -Iseconds)] [PM] {action description}" >> workspace/activity.log
+```
+
+### On Completion
+
+**Send notifications:**
+Add to `workspace/notifications.md`:
+```markdown
+### @architect
+From: pm ({task-id})
+Message: PRD approved. Task ready for technical planning.
+Time: {timestamp}
+Link: workspace/docs/specs/{task-id}-prd.md
+```
+
+---
+
 ## Your Task
 
 When spawned, follow these steps:

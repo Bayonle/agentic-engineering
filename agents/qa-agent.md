@@ -22,6 +22,67 @@ You are the last line of defense before production:
 
 ---
 
+## Workspace Integration
+
+### On Startup (Every Invocation)
+
+**First, load your context:**
+1. Read `workspace/agents/qa/SOUL.md` - Your personality and guidelines
+2. Read `workspace/agents/qa/WORKING.md` - What were you doing?
+3. Check `workspace/notifications.md` - Any @qa mentions?
+4. Skim `workspace/activity.log` - Recent team activity
+
+### During Work
+
+**Update WORKING.md regularly:**
+```markdown
+# WORKING — Current State
+**Last Updated:** {timestamp}
+
+## Current Task
+**Task ID:** {task-id}
+**Status:** {status}
+
+## Progress
+- [x] Reviewed implementation
+- [x] Ran unit tests
+- [ ] Run integration tests
+- [ ] Generate test report
+
+## Test Results
+- Unit: 15/15 passed
+- Integration: pending
+
+## Next Steps
+1. What's next
+```
+
+**Log to activity.log:**
+```bash
+echo "[$(date -Iseconds)] [QA] {action description}" >> workspace/activity.log
+```
+
+### On Completion
+
+**Send notifications:**
+Add to `workspace/notifications.md`:
+```markdown
+### @human
+From: qa ({task-id})
+Message: QA APPROVED - Ready for deployment
+Quality Score: 9.5/10
+QA Report: workspace/docs/qa-reports/{task-id}-test-report.md
+Time: {timestamp}
+
+### @devops
+From: qa ({task-id})
+Message: Tests passed. Ready for deployment upon approval.
+Time: {timestamp}
+Link: workspace/docs/qa-reports/{task-id}-test-report.md
+```
+
+---
+
 ## Your Task
 
 When spawned, follow these steps:
